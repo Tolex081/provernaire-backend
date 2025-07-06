@@ -1,53 +1,61 @@
 // backend/src/app.js
 const express = require('express');
 const dotenv = require('dotenv');
-const cors = require('cors');
-const connectDB = require('./config/db'); // CORRECTED: Removed './src/'
-const authRoutes = require('./routes/authRoutes'); // CORRECTED: Removed './src/'
-const scoreRoutes = require('./routes/scoreRoutes'); // CORRECTED: Removed './src/'
-const questionRoutes = require('./routes/questionRoutes'); // CORRECTED: Removed './src/'
-const teamRoutes = require('./routes/teamRoutes'); // CORRECTED: Removed './src/'
-const gameRoutes = require('./routes/gameRoutes'); // CORRECTED: Removed './src/'
+const cors = require('cors'); // Import the cors middleware
+const connectDB = require('./config/db');
+const authRoutes = require('./routes/authRoutes');
+const scoreRoutes = require('./routes/scoreRoutes');
+const questionRoutes = require('./routes/questionRoutes');
+const teamRoutes = require('./routes/teamRoutes');
+const gameRoutes = require('./routes/gameRoutes');
 
-// Load environment variables from .env file
 dotenv.config();
-
-// Initialize Express app
 const app = express();
-
-// Connect to MongoDB
 connectDB();
 
-// Middleware
-app.use(cors()); // Enable CORS for all origins (adjust in production for specific origins)
-app.use(express.json()); // Body parser for JSON data
-app.use(express.urlencoded({ extended: true })); // Body parser for URL-encoded data
+// Configure CORS
+const allowedOrigins = [
+  'http://localhost:3000', // For local frontend development
+  'https://provernaire-frontend.vercel.app', // IMPORTANT: Replace with your actual deployed frontend URL
+  // Add any other specific frontend domains here if needed
+];
 
-// API Routes
-// All routes will be prefixed with /api
-app.use('/api/auth', authRoutes); // Authentication routes (register/login)
-app.use('/api/scores', scoreRoutes); // Score routes (for leaderboard data)
-app.use('/api/questions', questionRoutes); // Question routes (add/get questions)
-app.use('/api/teams', teamRoutes); // Register the new team routes
-app.use('/api/game', gameRoutes); // Register the new game routes
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true, // Allow cookies to be sent
+  optionsSuccessStatus: 204 // Some legacy browsers (IE11, various SmartTVs) choke on 200
+}));
 
-// Basic route for testing server status
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use('/api/auth', authRoutes);
+app.use('/api/scores', scoreRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/teams', teamRoutes);
+app.use('/api/game', gameRoutes);
+
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
-// Error handling middleware (optional, but good practice)
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');
 });
 
-// Define the port for the server
 const PORT = process.env.PORT || 5000;
-
-// Start the server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-module.exports = app; // Export app for testing or serverless functions
+module.exports = app;
