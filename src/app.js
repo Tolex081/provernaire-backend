@@ -16,7 +16,7 @@ connectDB();
 // Configure CORS
 const allowedOrigins = [
   'http://localhost:3000', // For local frontend development
-  'https://provernaire-frontend.vercel.app', // IMPORTANT: Replace with your actual deployed frontend URL
+  'https://provernaire-frontend.vercel.app', // Your actual deployed frontend URL
   // Add any other specific frontend domains here if needed
 ];
 
